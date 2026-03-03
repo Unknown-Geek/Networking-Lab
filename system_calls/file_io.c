@@ -1,3 +1,13 @@
+/*
+ * File I/O using fopen/fprintf/fscanf
+ * -------------------------------------
+ * fopen("sample.txt", "w")   ← open for writing
+ *   └─ gets(line) → fprintf(fp, line)
+ *   └─ fclose()
+ * fopen("sample.txt", "r")   ← reopen for reading
+ *   └─ fscanf(fp, line) → printf(line)
+ *   └─ fclose()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

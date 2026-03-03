@@ -1,3 +1,19 @@
+/*
+ * Selective Repeat ARQ Client (sender)
+ * --------------------------------------
+ * socket(SOCK_DGRAM)
+ *   └─ pthread_create(receive_packets)    ← ACK/NACK listener runs in background
+ *   └─ send initial window: pthread_create(send_packet) for each
+ *   └─ sliding window loop: when window slides, create thread for new packet
+ *
+ * send_packet(thread per packet):
+ *   └─ loop while packet.sent==0: sendto() → sleep(TIMEOUT) → retry
+ *
+ * receive_packets(thread):
+ *   └─ loop: recvfrom() → sscanf(msg, packet_id)
+ *       ├─ "NACK" → packet.sent=0  (send_packet thread will retransmit)
+ *       └─ "ACK"  → packet.sent=1, slide window_start if needed
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

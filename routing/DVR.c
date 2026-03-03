@@ -1,3 +1,17 @@
+/*
+ * Distance Vector Routing (Bellman-Ford)
+ * ----------------------------------------
+ * Input: num_nodes, distance matrix dm[][]
+ *   └─ init: route[i].dist[j] = dm[i][j], route[i].from[j] = j
+ *   └─ repeat until no update (flag==0):
+ *       └─ for each i,j,k:
+ *           if route[i].dist[j] > route[i].dist[k] + route[k].dist[j]:
+ *               update dist and next-hop (from)
+ *   └─ print routing table for each router
+ *
+ * Key struct: route[i].dist[j] = cost from i to j
+ *             route[i].from[j] = next hop from i to reach j
+ */
 #include <stdio.h>
 
 struct node {

@@ -1,3 +1,12 @@
+/*
+ * UDP Server
+ * ----------
+ * socket(AF_INET, SOCK_DGRAM)   ← connectionless, no listen/accept
+ *   └─ bind(server_addr)
+ *       └─ recvfrom(buffer, &client_addr)  ← also captures sender's addr
+ *       └─ sendto(buffer, client_addr)     ← reply using captured addr
+ *       └─ close()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

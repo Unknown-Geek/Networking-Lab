@@ -1,3 +1,16 @@
+/*
+ * TCP Multi-Client Chat Server
+ * ----------------------------
+ * socket() → setsockopt(SO_REUSEADDR) → bind() → listen()
+ *   └─ loop: accept()  ← new client
+ *       └─ pthread_create(client_communication)
+ *
+ * client_communication(thread per client):
+ *   └─ loop: recv("SEND")
+ *       └─ recv(target_id)
+ *       └─ recv(message)
+ *       └─ forward message to all other clients via send()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

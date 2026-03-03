@@ -1,3 +1,15 @@
+/*
+ * FTP Server (TCP)
+ * ----------------
+ * socket() → bind() → listen() → accept()
+ *   └─ loop: recv(command)
+ *       ├─ "PUT": recv(filename) → fopen("w")
+ *       │         └─ loop: recv(chunk) until "END$" → fprintf → fclose
+ *       ├─ "GET": send(pid) → recv(filename) → fopen("r")
+ *       │         └─ send("200") → loop: fgets+send until EOF → send("END$")
+ *       │         or send("404") if file not found
+ *       └─ "BYE": close() → exit()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

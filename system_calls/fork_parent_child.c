@@ -1,3 +1,11 @@
+/*
+ * fork() - Basic parent/child with wait()
+ * -----------------------------------------
+ * fork()
+ *   ├─ child  (pid==0): print "Child"
+ *   └─ parent (pid>0) : wait()  ← blocks until child exits
+ *                         print "Parent"
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>

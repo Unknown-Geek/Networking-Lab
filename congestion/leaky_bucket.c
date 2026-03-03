@@ -1,3 +1,18 @@
+/*
+ * Leaky Bucket Algorithm
+ * -----------------------
+ * Input: output rate, bucket_size
+ *   └─ generate random packets
+ *   └─ loop while packets remain or bucket not empty:
+ *       ├─ add packet to bucket:
+ *       │   ├─ if packet+remaining > bucket_size → overflow (drop)
+ *       │   └─ else → remaining += packet size
+ *       ├─ pick random transmission time
+ *       └─ every clock tick (sleep 1s):
+ *           └─ transmit min(remaining, rate) bytes → remaining -= rate
+ *
+ * Concept: output is smoothed to a constant rate regardless of bursty input
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

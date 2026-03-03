@@ -1,3 +1,13 @@
+/*
+ * fork() - Print process IDs
+ * ---------------------------
+ * fork()
+ *   ├─ child  (pid==0): getpid()  ← own PID
+ *   │                   getppid() ← parent's PID
+ *   └─ parent (pid>0) : wait(NULL)
+ *                         getpid()  ← own PID
+ *                         getppid() ← its parent's PID (shell)
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>

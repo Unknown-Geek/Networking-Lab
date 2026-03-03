@@ -1,3 +1,14 @@
+/*
+ * Stop-and-Wait ARQ Client (with timeout/retransmit)
+ * ----------------------------------------------------
+ * socket(SOCK_DGRAM)
+ *   └─ loop (counter 1..3):
+ *       ├─ sendto(packet)
+ *       ├─ setsockopt(SO_RCVTIMEO, 5s)  ← set receive timeout
+ *       ├─ recvfrom()
+ *       ├─ if timeout (n<0)  → retry (counter stays same)
+ *       └─ if ACK received   → counter++
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,14 @@
+/*
+ * TCP Server
+ * ----------
+ * socket(AF_INET, SOCK_STREAM)
+ *   └─ bind(server_addr)
+ *       └─ listen()
+ *           └─ accept()  ← blocks until client connects
+ *               └─ recv(buffer)   ← read from client
+ *               └─ send(buffer)   ← reply to client
+ *               └─ close()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

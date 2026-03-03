@@ -1,3 +1,10 @@
+/*
+ * UDP Client
+ * ----------
+ * socket(AF_INET, SOCK_DGRAM)   ← no connect() needed
+ *   └─ sendto(buffer, server_addr)   ← send with destination addr each time
+ *   └─ recvfrom(buffer, &server_addr)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

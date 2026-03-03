@@ -1,3 +1,15 @@
+/*
+ * Go-Back-N Client (sender)
+ * --------------------------
+ * socket(SOCK_DGRAM)
+ *   └─ sendWindowPackets(windowStart, windowEnd)  ← send entire window at once
+ *   └─ loop until all packets ACKed:
+ *       ├─ setsockopt(SO_RCVTIMEO) → recvfrom()
+ *       ├─ timeout / wrong ACK → resend entire window (go back N)
+ *       └─ correct ACK → windowStart++ , windowEnd++, send new packet
+ *
+ * sendWindowPackets(): loop from windowStart to windowEnd → sendto each
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

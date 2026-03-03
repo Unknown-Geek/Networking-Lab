@@ -1,3 +1,13 @@
+/*
+ * Stop-and-Wait ARQ Server (with simulated packet loss)
+ * -------------------------------------------------------
+ * socket(SOCK_DGRAM) → bind()
+ *   └─ loop:
+ *       ├─ recvfrom(packet)
+ *       ├─ sleep(1)  ← simulate processing delay
+ *       └─ rand()%3==0 → sendto(ACK)   ← randomly drop 2/3 of ACKs
+ *                   else → drop silently (client will timeout & retry)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,3 +1,14 @@
+/*
+ * TCP Multi-Client Chat Client
+ * ----------------------------
+ * socket() → connect(server_addr)
+ *   └─ pthread_create(server_communication)  ← recv loop in background
+ *   └─ main loop: scanf("SEND")
+ *       └─ send("SEND") → send(target_id) → send(message)
+ *
+ * server_communication(thread):
+ *   └─ loop: recv(message) → print
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

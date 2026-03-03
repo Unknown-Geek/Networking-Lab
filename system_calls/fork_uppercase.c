@@ -1,3 +1,11 @@
+/*
+ * fork() - String to uppercase in child process
+ * -----------------------------------------------
+ * gets(str)
+ * fork()
+ *   ├─ child  (pid==0): loop str → print char-32 (uppercase trick)
+ *   └─ parent (pid>0) : wait(NULL)   ← wait for child
+ */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

@@ -1,3 +1,13 @@
+/*
+ * Stop-and-Wait Server (receiver)
+ * --------------------------------
+ * socket(SOCK_DGRAM) → bind()
+ *   └─ loop (packet_count 0..10):
+ *       ├─ recvfrom()          ← wait for packet N
+ *       ├─ sendto(ACK N)       ← acknowledge packet
+ *       ├─ recvfrom()          ← wait for client's final ACK
+ *       └─ packet_count++
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

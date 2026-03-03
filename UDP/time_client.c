@@ -1,3 +1,11 @@
+/*
+ * UDP Time Client
+ * ---------------
+ * socket(SOCK_DGRAM)
+ *   └─ sendto("time", server_addr)  ← request current time
+ *   └─ recvfrom(buffer)             ← receive time string
+ *   └─ print buffer
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

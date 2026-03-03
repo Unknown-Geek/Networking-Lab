@@ -1,3 +1,10 @@
+/*
+ * fork() - Prime check in parent process
+ * ----------------------------------------
+ * fork()
+ *   ├─ child  (pid==0): (unused - just exits)
+ *   └─ parent (pid>0) : check if n is prime → print result
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>

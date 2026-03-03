@@ -1,3 +1,14 @@
+/*
+ * Go-Back-N Server (receiver)
+ * ----------------------------
+ * socket(SOCK_DGRAM) → bind()
+ *   └─ loop:
+ *       ├─ recvfrom(packet)
+ *       ├─ check recd[] array for duplicates
+ *       ├─ sleep(1)
+ *       └─ rand()%3==0 → sendto(ACK)   ← randomly drop ACKs
+ *                   else → drop  (client resends entire window)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

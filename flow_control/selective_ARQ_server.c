@@ -1,3 +1,13 @@
+/*
+ * Selective Repeat ARQ Server (receiver)
+ * ----------------------------------------
+ * socket(SOCK_DGRAM) → bind()
+ *   └─ loop:
+ *       ├─ recvfrom(packet_id)
+ *       ├─ if already received or rand()%5==0  → drop silently
+ *       ├─ rand()%4==0  → sendto("NACK id")  ← simulate corruption
+ *       └─ else         → sendto("ACK id"), mark received
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

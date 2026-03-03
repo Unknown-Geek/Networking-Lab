@@ -1,3 +1,17 @@
+/*
+ * Link State Routing (Dijkstra's Algorithm)
+ * -------------------------------------------
+ * Input: num_nodes, links (src, dest, cost) → fill graph[][]
+ *   └─ dijkstra(start) for each node:
+ *       └─ init: distance[all]=INF, distance[start]=0
+ *       └─ repeat num_nodes-1 times:
+ *           ├─ pick min_node: unvisited with smallest distance
+ *           ├─ mark visited
+ *           └─ relax neighbors: if dist[min]+graph[min][i] < dist[i] → update
+ *       └─ print routing table (destination, next hop, cost)
+ *
+ * Key arrays: distance[] = shortest cost, previous[] = next hop
+ */
 #include <stdio.h>
 #include <stdbool.h>
 

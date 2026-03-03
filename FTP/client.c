@@ -1,3 +1,15 @@
+/*
+ * FTP Client (TCP)
+ * ----------------
+ * socket() → connect(server_addr)
+ *   └─ loop: print menu → scanf(choice)
+ *       ├─ PUT(1): fopen(filename) → send("PUT") → send(filename)
+ *       │         └─ loop: fscanf(line)+send until EOF → send("END$")
+ *       ├─ GET(2): send("GET") → recv(pid) → send(filename)
+ *       │         └─ recv("200"/"404")
+ *       │         └─ if 200: fopen("w") → loop: recv+fprintf until "END$"
+ *       └─ BYE(3): send("BYE") → close() → exit()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

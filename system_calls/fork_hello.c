@@ -1,3 +1,10 @@
+/*
+ * fork() - Child prints repeatedly, parent waits
+ * ------------------------------------------------
+ * fork()
+ *   ├─ child  (pid==0): loop 5x: print "Hello" → sleep(1)
+ *   └─ parent (pid>0) : wait(NULL)   ← waits for child to finish
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>

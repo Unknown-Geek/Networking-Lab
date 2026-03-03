@@ -1,3 +1,12 @@
+/*
+ * UDP Time Server
+ * ---------------
+ * socket(SOCK_DGRAM) → bind()
+ *   └─ loop: recvfrom(buffer)   ← wait for any request
+ *       └─ if buffer == "time":
+ *           └─ time() → localtime() → strftime()  ← get current time string
+ *           └─ sendto(time_str, client_addr)
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

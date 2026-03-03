@@ -1,3 +1,10 @@
+/*
+ * fork() - Parallel computation (odd/even sum)
+ * ----------------------------------------------
+ * fork()
+ *   ├─ child  (pid==0): compute odd sum  → print
+ *   └─ parent (pid>0) : compute even sum → print
+ */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
