@@ -1,3 +1,12 @@
+/*
+ * TCP Client
+ * ----------
+ * socket(AF_INET, SOCK_STREAM)
+ *   └─ connect(server_addr)  ← no bind needed
+ *       └─ send(buffer)   ← send to server
+ *       └─ recv(buffer)   ← read reply
+ *       └─ close()
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
