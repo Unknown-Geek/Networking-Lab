@@ -1,5 +1,5 @@
 # CSL 332 — Networking Lab
-**College of Engineering Trivandrum | Semester 4 | Dec 2025 – Mar 2026**
+**College of Engineering Trivandrum | Semester 6 | Dec 2025 – Mar 2026**
 
 ---
 
