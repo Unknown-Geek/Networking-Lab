@@ -13,79 +13,89 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <pthread.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <string.h>
 
-#define MAX_CLIENTS 1024
-
-int client_count = 0;
+#define SIZE 5
 
 typedef struct {
-        int index;
-        int client_sock;
-        struct sockaddr_in client_addr;
-        int addr_size;
-} Client;
+    struct sockaddr_in client_addr;
+    socklen_t client_size;
+    int client_sock;
+    int index;
+}Client;
 
-Client clients[MAX_CLIENTS];
-pthread_t thread[MAX_CLIENTS];
+Client clients[SIZE];
+pthread_t thread[SIZE];
 
 void *client_communication(void *arg) {
-        Client *c = (Client*)arg;
-        int client_sock = c->client_sock;
-        int index = c->index;
-        char buffer[1024];
+    Client *c = (Client*) arg;
+    struct sockaddr_in sockaddr = c->client_addr;
+    int client_sock = c->client_sock;
+    int client_size = c->client_size;
+    int index = c->index;
+    char buffer[1024];
+    int len;
 
-        printf("Client %d connected\n", index + 1);
+    printf("Client %d connected.\n",index+1);
 
-        while (1) {
-                bzero(buffer, 1024);
-                int n = recv(client_sock, buffer, 1024, 0);
-                buffer[n] = '\0';
-
-                if (strcmp(buffer, "SEND") == 0) {
-                        n = recv(client_sock, buffer, 1024, 0);
-                        buffer[n] = '\0';
-                        int id = atoi(buffer) - 1;
-                        n = recv(client_sock, buffer, 1024, 0);
-                        buffer[n] = '\0';
-                        for (int i = 0; i < client_count; i++) {
-                                if (i != id)
-                                        send(clients[i].client_sock, buffer, 1024, 0);
-                        }
-                }
+    while(1) {
+        bzero(buffer,1024);
+        len = recv(client_sock,buffer,sizeof(buffer),0);
+        buffer[len] = '\0';
+        
+        if(strcmp(buffer,"SEND") == 0) {
+            len = recv(client_sock,buffer,sizeof(buffer),0);
+            buffer[len] = '\0';
+            printf("Data Received from Client %d: %s\n",index+1,buffer);
+            for(int i=0 ; i<SIZE ; i++) {
+                if(i != index)
+                    send(clients[i].client_sock,buffer,sizeof(buffer),0);
+            }
         }
-        return NULL;
+    }
 }
 
 int main() {
-        int port = 5123;
-        int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+    char *ip = "127.0.0.1";
+    int port = 4536;
+    char buffer[1024];
+    struct sockaddr_in server_addr;
+    int server_sock;
+    int n;
+    int count = 0;
+    socklen_t server_size;
 
-        int opt = 1;
-        setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    server_sock = socket(AF_INET,SOCK_STREAM,0);
+    if(server_sock < 0) {
+        printf("Error creating socket\n");
+    }
 
-        struct sockaddr_in server_addr;
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(port);
-        server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    memset(&server_addr,'\0',sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = inet_addr(ip);
 
-        if (bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-                perror("Bind error");
-                exit(0);
-        }
+    server_size = sizeof(server_addr);
+    
+    n = bind(server_sock,(struct sockaddr*)&server_addr,server_size);
+    if(n < 0) {
+        printf("Bind error\n");
+    }
 
-        listen(server_sock, MAX_CLIENTS);
-        printf("Server listening on port %d\n", port);
+    printf("Server listening on port %d\n",port);
+    listen(server_sock,SIZE);
 
-        while (1) {
-                socklen_t addr_size = sizeof(clients[client_count].client_addr);
-                clients[client_count].client_sock = accept(server_sock, (struct sockaddr*)&clients[client_count].client_addr, &addr_size);
-                clients[client_count].index = client_count;
-                pthread_create(&thread[client_count], NULL, client_communication, (void*)&clients[client_count]);
-                client_count++;
-        }
-        return 0;
+    while(1) {
+        clients[count].client_size = sizeof(clients[count].client_addr);
+        clients[count].client_sock = accept(server_sock,(struct sockaddr*)&clients[count].client_addr,&clients[count].client_size);
+        clients[count].index = count;
+        pthread_create(&thread[count],NULL,client_communication,&clients[count]);
+        count++;
+    }
+
+    return 0;
 }

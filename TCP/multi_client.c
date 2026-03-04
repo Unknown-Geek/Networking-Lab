@@ -13,45 +13,71 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 
-void *server_communication(void *arg) {
-        int client_sock = *((int*)arg);
-        char buffer[1024];
-        while (1) {
-                bzero(buffer, 1024);
-                int n = recv(client_sock, buffer, 1024, 0);
-                buffer[n] = '\0';
-                printf("%s\n", buffer);
+void *send_data(void *arg) {
+    char buffer[1024];
+    int len;
+    int client_sock = *((int *)arg);
+
+    while(1){
+        bzero(buffer,1024);
+        gets(buffer);
+        if(strcmp(buffer,"SEND") == 0){
+            send(client_sock,buffer,sizeof(buffer),0);
+            bzero(buffer,1024);
+            printf("Enter data to send : ");
+            gets(buffer);
+            send(client_sock,buffer,sizeof(buffer),0);
         }
-        return NULL;
+    }
+}
+
+void *receive_data(void *arg) {
+    char buffer[1024];
+    int len;
+    int client_sock = *((int *)arg);
+
+    while(1){
+        bzero(buffer,1024);
+        len = recv(client_sock,buffer,sizeof(buffer),0);
+        if(len > 0) {
+            printf("%s\n",buffer);
+        }
+    }
 }
 
 int main() {
-        int port = 5123;
-        int client_sock = socket(AF_INET, SOCK_STREAM, 0);
-        struct sockaddr_in server_addr;
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(port);
-        server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    char *ip = "127.0.0.1";
+    int port = 4536;
+    struct sockaddr_in server_addr;
+    int client_sock;
+    socklen_t client_size,server_size;
+    int len;
+    char buffer[1024];
 
-        if (connect(client_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1)
-                exit(0);
-        printf("Connection established\n");
+    pthread_t send_thread,receive_thread;
 
-        pthread_t thread;
-        pthread_create(&thread, NULL, server_communication, (void*)&client_sock);
+    client_sock = socket(AF_INET,SOCK_STREAM,0);
+    if(client_sock < 0) {
+        printf("Error creating socket\n");
+    }
 
-        char input[1024];
-        while (1) {
-                scanf("%s", input);
-                if (strcmp(input, "SEND") == 0) {
-                        send(client_sock, input, 1024, 0);
-                        scanf("%s", input);
-                        send(client_sock, input, 1024, 0);
-                        scanf("%[^\n]", input);
-                        send(client_sock, input, 1024, 0);
-                }
-        }
+    memset(&server_addr,'\0',sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = inet_addr(ip);
+
+    server_size = sizeof(server_addr);
+    connect(client_sock,(struct sockaddr*)&server_addr,server_size);
+
+    pthread_create(&send_thread,NULL,send_data,&client_sock);
+    pthread_create(&receive_thread,NULL,receive_data,&client_sock);
+
+    pthread_join(send_thread,NULL);
+    pthread_join(receive_thread,NULL);
+
+    return 0;
 }
