@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 int main() {
         char* ip = "127.0.0.1";

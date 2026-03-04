@@ -10,50 +10,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 int main() {
-        char* ip = "127.0.0.1";
-        int port = 8776;
-        int server_sock;
-        char buffer[1024];
-        struct sockaddr_in server_addr, client_addr;
-        socklen_t addr_size = sizeof(client_addr);
+    char *ip = "127.0.0.1";
+    int port = 4534;
+    char buffer[1024];
+    struct sockaddr_in client_addr,server_addr;
+    int server_sock;
+    socklen_t client_size,server_size;
+    int n;
 
-        server_sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if (server_sock < 0) {
-                perror("Socket error");
-                exit(1);
-        }
+    server_sock = socket(AF_INET,SOCK_DGRAM,0);
+    if(server_sock < 0) {
+        printf("Socket error\n");
+    }    
 
-        memset(&server_addr, '\0', sizeof(server_addr));
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(port);
-        server_addr.sin_addr.s_addr = inet_addr(ip);
+    memset(&server_addr,'\0',sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = inet_addr(ip);
 
-        if (bind(server_sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-                perror("Bind error");
-                exit(1);
-        }
+    client_size = sizeof(client_addr);
+    server_size = sizeof(server_addr);
+    
+    n = bind(server_sock,(struct sockaddr*)&server_addr,server_size);
+    if (n<0) {
+        printf("Bind error");
+    }
 
-        printf("UDP time server listening on port %d\n", port);
+    printf("Server listening on port %d\n",port);
 
-        while (1) {
-                int n = recvfrom(server_sock, buffer, sizeof(buffer), 0, (struct sockaddr*)&client_addr, &addr_size);
-                buffer[n] = '\0';
-                printf("Received request: %s\n", buffer);
-
-                if (strcmp(buffer, "time") == 0) {
-                        time_t t = time(NULL);
-                        struct tm* tm_info = localtime(&t);
-                        char time_str[1024];
-                        strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", tm_info);
-                        sendto(server_sock, time_str, strlen(time_str), 0, (struct sockaddr*)&client_addr, addr_size);
-                        printf("Sent time: %s\n", time_str);
-                }
-        }
-
-        close(server_sock);
+    bzero(buffer,1024);
+    recvfrom(server_sock,buffer,sizeof(buffer),0,(struct sockaddr*)&client_addr,&client_size);
+    if (strcmp(buffer,"TIME") == 0) {
+        printf("Request received from client : %s\n",buffer);
+        time_t t = time(NULL);
+        struct tm* tm = localtime(&t);
+        char time_str[1024];
+        strftime(time_str,sizeof(time_str),"%F %T",tm);
+        sendto(server_sock,time_str,sizeof(time_str),0,(struct sockaddr*)&client_addr,client_size);
+        printf("Data sent to client : %s\n",time_str);
+    }
+    close(server_sock);
 }
