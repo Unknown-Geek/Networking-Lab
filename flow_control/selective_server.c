@@ -1,12 +1,13 @@
 /*
- * Selective Repeat ARQ Server (receiver)
- * ----------------------------------------
+ * Selective Repeat Server (receiver)
+ * -----------------------------------
  * socket(SOCK_DGRAM) → bind()
  *   └─ loop:
- *       ├─ recvfrom(packet_id)
- *       ├─ if already received or rand()%5==0  → drop silently
- *       ├─ rand()%4==0  → sendto("NACK id")  ← simulate corruption
- *       └─ else         → sendto("ACK id"), mark received
+ *       ├─ recvfrom(packet)
+ *       ├─ check recd[] array for duplicates
+ *       ├─ sleep(1)
+ *       ├─ rand()%3==0 → sendto(NACK)
+ *       └─ else → sendto(ACK)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,21 +16,9 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define PACKET_COUNT 10
-
-typedef struct {
-        int id;
-        int received;
-} Packet;
-
-Packet packets[PACKET_COUNT];
+#define PACKET_COUNT 5
 
 int main() {
-        for (int i = 0; i < PACKET_COUNT; i++) {
-                packets[i].id = i + 1;
-                packets[i].received = 0;
-        }
-
         char* ip = "127.0.0.100";
         int port = 6665;
         srand(time(0));
@@ -57,24 +46,33 @@ int main() {
 
         printf("Server listening on port %d\n", port);
 
+        int recd[10];
+        for (int i = 0; i < 10; i++)
+                recd[i] = -1;
+
         while (1) {
                 bzero(buffer, 1024);
                 addr_size = sizeof(client_addr);
                 recvfrom(server_sock, buffer, 1024, 0, (struct sockaddr*)&client_addr, &addr_size);
+
+                int n = atoi(buffer);
+                if (recd[n] != n) {
+                        recd[n] = n;
+                        printf("Server: Received packet %s\n", buffer);
+                } else {
+                        printf("Server: Received duplicate packet %s\n", buffer);
+                }
+
                 sleep(1);
 
-                int id = atoi(buffer);
-                if (packets[id - 1].received == 1 || rand() % 5 == 0)
-                        continue;
-                else if (rand() % 4 == 0) {
-                        printf("Server: Corrupted packet %s. Sending NACK\n", buffer);
-                        sprintf(buffer, "NACK %d", id);
+                if (rand() % 3 == 0) {
+                        printf("Server: Sending NACK for packet %d\n", n);
+                        sprintf(buffer, "NACK %d", n);
                         sendto(server_sock, buffer, 1024, 0, (struct sockaddr*)&client_addr, addr_size);
                 } else {
-                        printf("Server: Received packet %s. Sending ACK\n", buffer);
-                        sprintf(buffer, "ACK %d", id);
+                        printf("Server: Sending ACK for packet %d\n", n);
+                        sprintf(buffer, "ACK %d", n);
                         sendto(server_sock, buffer, 1024, 0, (struct sockaddr*)&client_addr, addr_size);
-                        packets[id - 1].received = 1;
                 }
         }
         close(server_sock);

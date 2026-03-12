@@ -15,18 +15,23 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #define TIMEOUT 12
 #define PACKET_COUNT 5
 #define WINDOW_SIZE 2
 
-void send_window(int client_sock, struct sockaddr_in server_addr, int packets[], int start, int end) {
+void send_packet(int client_sock, struct sockaddr_in server_addr, int packet) {
         char buffer[1024];
+        bzero(buffer, 1024);
+        sprintf(buffer, "%d", packet);
+        printf("Client: Sending packet %s\n", buffer);
+        sendto(client_sock, buffer, 1024, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
+}
+
+void send_window(int client_sock, struct sockaddr_in server_addr, int packets[], int start, int end) {
         while (start < end) {
-                bzero(buffer, 1024);
-                sprintf(buffer, "%d", packets[start]);
-                printf("Client: Sending packet %s\n", buffer);
-                sendto(client_sock, buffer, 1024, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                send_packet(client_sock, server_addr, packets[start]);
                 start++;
         }
 }
@@ -39,6 +44,7 @@ int main() {
         struct sockaddr_in server_addr;
         char buffer[1024];
         socklen_t addr_size;
+        struct timeval timeout;
 
         client_sock = socket(AF_INET, SOCK_DGRAM, 0);
         if (client_sock < 0) {
@@ -51,46 +57,38 @@ int main() {
         server_addr.sin_port = htons(port);
         server_addr.sin_addr.s_addr = inet_addr(ip);
 
+        timeout.tv_sec = TIMEOUT;
+        timeout.tv_usec = 0;
+        setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
         int packets[PACKET_COUNT];
         for (int i = 0; i < PACKET_COUNT; i++)
-                packets[i] = i + 1;
+                packets[i] = i;
 
         int window_start = 0;
         int window_end = WINDOW_SIZE;
-        int new_packet = 1;
 
         send_window(client_sock, server_addr, packets, window_start, window_end);
 
-        while (window_start != PACKET_COUNT) {
+        while (window_start < PACKET_COUNT) {
                 bzero(buffer, 1024);
                 addr_size = sizeof(server_addr);
-
-                struct timeval timeout;
-                timeout.tv_sec = TIMEOUT;
-                timeout.tv_usec = 0;
-                setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
                 int n = recvfrom(client_sock, buffer, 1024, 0, (struct sockaddr*)&server_addr, &addr_size);
                 if (n < 0) {
                         printf("Client: Timeout! Resending window\n");
                         send_window(client_sock, server_addr, packets, window_start, window_end);
                 } else {
-                        printf("Client: Received ACK for packet %s\n", buffer);
-                        if (atoi(buffer) != packets[window_start]) {
+                        int ack_id = atoi(buffer);
+                        printf("Client: Received ACK for packet %d\n", ack_id);
+                        if (ack_id != packets[window_start]) {
                                 printf("Client: Wrong ACK! Resending window\n");
                                 send_window(client_sock, server_addr, packets, window_start, window_end);
                         } else {
                                 window_start++;
                                 if (window_end < PACKET_COUNT) {
+                                        send_packet(client_sock, server_addr, packets[window_end]);
                                         window_end++;
-                                        if (new_packet) {
-                                                bzero(buffer, 1024);
-                                                sprintf(buffer, "%d", packets[window_end - 1]);
-                                                printf("Client: Sending packet %s\n", buffer);
-                                                sendto(client_sock, buffer, 1024, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
-                                        }
-                                } else {
-                                        new_packet = 0;
                                 }
                         }
                 }

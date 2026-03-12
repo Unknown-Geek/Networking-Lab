@@ -53,9 +53,9 @@ int main() {
                 addr_size = sizeof(client_addr);
                 recvfrom(server_sock, buffer, 1024, 0, (struct sockaddr*)&client_addr, &addr_size);
 
-                int b = atoi(buffer);
-                if (recd[b] != b) {
-                        recd[b] = b;
+                int n = atoi(buffer);
+                if (recd[n] != n) {
+                        recd[n] = n;
                         printf("Server: Received packet %s\n", buffer);
                 } else {
                         printf("Server: Received duplicate packet %s\n", buffer);
