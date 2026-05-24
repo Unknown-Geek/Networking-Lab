@@ -13,45 +13,48 @@
  *
  * Concept: output is smoothed to a constant rate regardless of bursty input
  */
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <unistd.h>
+#include <time.h>
 
-#define PACKET_COUNT 3
+#define PACKETS 10
 
 int main() {
-        srand(time(0));
-        int packets[PACKET_COUNT], i, rate, bucket_size;
-        int remaining_size = 0;
+    int bucket_size, rate;
+    int packets[PACKETS];
+    int remaining_size = 0;
+    int sent;
 
-        for (int i = 0; i < PACKET_COUNT; i++)
-                packets[i] = (rand() % 6 + 1) * 10;
+    srand(time(0));
 
-        printf("Enter output rate: ");
-        scanf("%d", &rate);
-        printf("Enter bucket size: ");
-        scanf("%d", &bucket_size);
-        printf("\n");
+    for(int i=0 ; i<PACKETS ; i++) {
+        packets[i] = (rand() % 6 + 1) * 10; 
+    }
+    printf("Enter the bucket_size : ");
+    scanf("%d",&bucket_size);
 
-        for (int i = 0; i < PACKET_COUNT || remaining_size > 0; i++) {
-                if (i < PACKET_COUNT) {
-                        if (packets[i] + remaining_size > bucket_size)
-                                printf("Bucket overflow! Packet %d dropped\n", packets[i]);
-                        else {
-                                remaining_size += packets[i];
-                                printf("Incoming packet size: %d, bucket: %d\n", packets[i], remaining_size);
-                        }
-                }
-
-                sleep(1);
-                int sent;
-                if (remaining_size < rate)
-                        sent = remaining_size;
-                else
-                        sent = rate;
-                        
-                remaining_size -= sent;
-                printf("Transmitted: %d, bucket: %d\n\n", sent, remaining_size);
+    printf("Enter the output rate : ");
+    scanf("%d", &rate);
+    printf("\n");
+    
+    for (int i=0 ; i<PACKETS ; i++) {
+        if (packets[i] + remaining_size > bucket_size) {
+            printf("Bucket Overflow. Packet %d dropped\n\n",packets[i]);
+        } else {
+            remaining_size += packets[i];
+            printf("Incoming packet : %d. Bucket : %d\n\n",packets[i],remaining_size);
         }
+
+        sleep(1);
+        if(remaining_size < rate) 
+            sent = remaining_size;
+        else
+            sent = rate;
+        
+        remaining_size -= sent;
+
+        printf("Transmitted : %d. Bucket : %d\n\n",sent,remaining_size);
+    }
 }
