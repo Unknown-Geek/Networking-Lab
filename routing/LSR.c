@@ -12,79 +12,108 @@
  *
  * Key arrays: distance[] = shortest cost, previous[] = next hop
  */
-#include <stdio.h>
-#include <stdbool.h>
 
-#define MAX_NODES 10
+#include <stdbool.h>
+#include <stdio.h>
+
+#define MAX 25
 #define INF 99999
 
-int num_nodes;
-int graph[MAX_NODES][MAX_NODES];
-bool visited[MAX_NODES];
+int nodes;
+int graph[MAX][MAX];
 
-void dijkstra(int start) {
-        int distance[MAX_NODES];
-        int previous[MAX_NODES];
+void dijkstra(int src) {
+    int dist[MAX];
+    int prev[MAX];
+    int visited[MAX];
 
-        for (int i = 0; i < num_nodes; i++) {
-                distance[i] = INF;
-                visited[i] = false;
-                previous[i] = -1;
+    for (int i = 0; i < nodes; i++) {
+        dist[i] = INF;
+        prev[i] = -1;
+        visited[i] = false;
+    }
+
+    dist[src] = 0;
+
+    while (true) {
+        int u = -1;
+
+        for (int i = 0; i < nodes; i++) {
+            if (!visited[i] && (u == -1 || dist[i] < dist[u])) {
+                u = i;
+            }
         }
 
-        distance[start] = 0;
+        if (u == -1) {
+            break; // No more nodes to visit
+        }
 
-        for (int count = 0; count < num_nodes - 1; count++) {
-                int min_dist = INF, min_node = -1;
-                for (int i = 0; i < num_nodes; i++) {
-                        if (!visited[i] && distance[i] < min_dist) {
-                                min_dist = distance[i];
-                                min_node = i;
-                        }
+        visited[u] = true;
+
+        for (int v = 0; v < nodes; v++) {
+            if (!visited[v] && graph[u][v] != INF) {
+                int newdist = dist[u] + graph[u][v];
+                if (newdist < dist[v]) {
+                    dist[v] = newdist;
+                    prev[v] = u;
                 }
+            }
+        }
+    }
 
-                if (min_node == -1) break;
-                visited[min_node] = true;
+    printf("Routing table for node %c:\n", src + 65);
+    printf("%-10s %-10s %-10s\n", "Dest", "Next", "Distance");
 
-                for (int i = 0; i < num_nodes; i++) {
-                        if (!visited[i] && graph[min_node][i] != INF &&
-                            distance[min_node] + graph[min_node][i] < distance[i]) {
-                                distance[i] = distance[min_node] + graph[min_node][i];
-                                previous[i] = min_node;
-                        }
-                }
+    for (int i = 0; i < nodes; i++) {
+        if (src == i) {
+            continue;
         }
 
-        printf("\nRouting table for node %d:\n", start);
-        printf("Destination\tNext Hop\tCost\n");
-        for (int i = 0; i < num_nodes; i++) {
-                if (i != start)
-                        printf("%d\t\t%d\t\t%d\n", i, previous[i], distance[i]);
+        int nexthop = i;
+        while (prev[nexthop] != src && prev[nexthop] != -1) {
+            nexthop = prev[nexthop];
         }
+
+        printf("%-10c %-10c %-10d\n", i + 65, nexthop + 65, dist[i]);
+    }
+
+    printf("\n");
 }
 
-int main() {
-        printf("Enter number of nodes: ");
-        scanf("%d", &num_nodes);
+int main(void) {
+    int links;
+    int src;
+    int dest;
+    int cost;
 
-        for (int i = 0; i < num_nodes; i++)
-                for (int j = 0; j < num_nodes; j++)
-                        graph[i][j] = (i == j) ? 0 : INF;
+    printf("Enter the number of nodes: ");
+    scanf("%d", &nodes);
 
-        int num_links;
-        printf("Enter number of links: ");
-        scanf("%d", &num_links);
-
-        printf("Enter source, destination, and cost of each link:\n");
-        for (int i = 0; i < num_links; i++) {
-                int src, dest, cost;
-                scanf("%d %d %d", &src, &dest, &cost);
-                graph[src][dest] = cost;
-                graph[dest][src] = cost;
+    // Init graph
+    for (int i = 0; i < nodes; i++) {
+        for (int j = 0; j < nodes; j++) {
+            if (i == j)
+                graph[i][j] = 0;
+            else
+                graph[i][j] = INF;
         }
+    }
 
-        for (int i = 0; i < num_nodes; i++)
-                dijkstra(i);
+    printf("Enter the number of links: ");
+    scanf("%d", &links);
 
-        return 0;
+    printf("\nEnter the src, dest, cost:\n");
+    for (int i = 0; i < links; i++) {
+        scanf("%d %d %d", &src, &dest, &cost);
+        graph[src][dest] = cost;
+        graph[dest][src] = cost;
+    }
+
+    printf("\n");
+
+    for (int i = 0; i < nodes; i++) {
+        dijkstra(i);
+    }
+
+    return 0;
 }
