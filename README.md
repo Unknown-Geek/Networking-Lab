@@ -47,9 +47,12 @@
 | [`TCP/client.c`](TCP/client.c) | Client | Connects to server on port 4321, sends user input, prints the server's reply |
 | [`TCP/multi_server.c`](TCP/multi_server.c) | Chat server | Spawns a `pthread` per client; routes `SEND <id> <msg>` to all other connected clients |
 | [`TCP/multi_client.c`](TCP/multi_client.c) | Chat client | Background thread prints incoming messages; main loop reads user input and sends `SEND` commands |
+| [`TCP/multi_timeserver_server.c`](TCP/multi_timeserver_server.c) | Time server | Accepts multiple clients, sends current server time on demand using `time()` and `strftime()` |
+| [`TCP/multi_timeserver_client.c`](TCP/multi_timeserver_client.c) | Time client | Connects to time server, requests current time, displays formatted response |
 
 > **Compile:** `gcc server.c -o server` / `gcc client.c -o client`  
-> **Multi:** `gcc -pthread multi_server.c -o server` / `gcc -pthread multi_client.c -o client`
+> **Multi:** `gcc -pthread multi_server.c -o server` / `gcc -pthread multi_client.c -o client`  
+> **Multi-timeserver:** `gcc -pthread multi_timeserver_server.c -o timeserver` / `gcc multi_timeserver_client.c -o timeclient`
 
 ---
 
