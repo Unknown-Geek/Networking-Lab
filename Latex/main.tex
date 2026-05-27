@@ -1278,7 +1278,7 @@ $ns connect $tcp $sink
 
 set telnet [new Application/Traffic/Exponential]
 $telnet attach-agent $tcp
-$telnet set packetSize_ 200
+$telnet set PACKET_COUNT_ 200
 $telnet set burst_time_ 0.5
 $telnet set idle_time_ 0.5
 $telnet set rate_ 100k
@@ -1378,7 +1378,7 @@ $ns connect $udp $null
 
 set cbr [new Application/Traffic/CBR]
 $cbr attach-agent $udp
-$cbr set packetSize_ 512
+$cbr set PACKET_COUNT_ 512
 $cbr set interval_ 0.2
 
 $ns at 1.0 "$cbr start"
@@ -1569,7 +1569,7 @@ set udp($i) [new Agent/UDP]
 $ns attach-agent $node($i) $udp($i)
 $ns connect $udp($i) $null
 set cbr($i) [new Application/Traffic/CBR]
-$cbr($i) set packetSize_ 1000
+$cbr($i) set PACKET_COUNT_ 1000
 $cbr($i) set interval_ 0.001
 $cbr($i) attach-agent $udp($i)
 $ns at 0.2 "$cbr($i) start"
@@ -1673,7 +1673,7 @@ $ns attach-agent $n3 $null
 $ns connect $udp $null
 # Create CBR Traffic
 set cbr [new Application/Traffic/CBR]
-$cbr set packetSize_ 512
+$cbr set PACKET_COUNT_ 512
 $cbr set interval_ 0.2
 $cbr attach-agent $udp
 # Start and Stop Traffic

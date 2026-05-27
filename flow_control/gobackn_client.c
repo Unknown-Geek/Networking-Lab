@@ -10,89 +10,91 @@
  *
  * sendWindowPackets(): loop from windowStart to windowEnd → sendto each
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+#include <sys/socket.h>
 #include <sys/time.h>
+#include <arpa/inet.h>
 
-#define TIMEOUT 12
 #define PACKET_COUNT 5
-#define WINDOW_SIZE 2
+#define TIMEOUT 5
+#define WINDOWSIZE 2
 
-void send_packet(int client_sock, struct sockaddr_in server_addr, int packet) {
-        char buffer[1024];
-        bzero(buffer, 1024);
-        sprintf(buffer, "%d", packet);
-        printf("Client: Sending packet %s\n", buffer);
-        sendto(client_sock, buffer, 1024, 0, (struct sockaddr*)&server_addr, sizeof(server_addr));
+char *ip = "127.0.0.1";
+int port = 4555;
+int client_sock;
+struct sockaddr_in server_addr;
+socklen_t server_size;
+int packets[PACKET_COUNT];
+
+void send_packet(int packet) {
+    char buffer[1024];
+    bzero(buffer,1024);
+    sprintf(buffer,"%d",packet);
+    printf("Client : Sending packet %d\n",packet);
+    sendto(client_sock,buffer,sizeof(buffer),0,(struct sockaddr *)&server_addr, server_size);
 }
 
-void send_window(int client_sock, struct sockaddr_in server_addr, int packets[], int start, int end) {
-        while (start < end) {
-                send_packet(client_sock, server_addr, packets[start]);
-                start++;
-        }
+void send_window(int start,int end) {
+    while(start < end){
+        send_packet(packets[start]);
+        start++;
+    }
 }
 
 int main() {
-        char* ip = "127.0.0.100";
-        int port = 6665;
+    char buffer[1024];
+    struct timeval timeout;
+    server_size = sizeof(server_addr);
 
-        int client_sock;
-        struct sockaddr_in server_addr;
-        char buffer[1024];
-        socklen_t addr_size;
-        struct timeval timeout;
+    client_sock = socket(AF_INET,SOCK_DGRAM,0);
+    if (client_sock < 0) {
+        printf("Socket Error.\n");
+        exit(1);
+    }
 
-        client_sock = socket(AF_INET, SOCK_DGRAM, 0);
-        if (client_sock < 0) {
-                perror("Socket error");
-                exit(1);
-        }
+    memset(&server_addr,'\0',server_size);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = inet_addr(ip);
 
-        memset(&server_addr, '\0', sizeof(server_addr));
-        server_addr.sin_family = AF_INET;
-        server_addr.sin_port = htons(port);
-        server_addr.sin_addr.s_addr = inet_addr(ip);
+    timeout.tv_sec = TIMEOUT;
+    timeout.tv_usec = 0;
+    setsockopt(client_sock,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof(timeout));
+    
+    for(int i=0 ; i<PACKET_COUNT ; i++) {
+        packets[i] = i;
+    }
 
-        timeout.tv_sec = TIMEOUT;
-        timeout.tv_usec = 0;
-        setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    int window_start = 0;
+    int window_end = WINDOWSIZE;
 
-        int packets[PACKET_COUNT];
-        for (int i = 0; i < PACKET_COUNT; i++)
-                packets[i] = i;
+    send_window(window_start,window_end);
 
-        int window_start = 0;
-        int window_end = WINDOW_SIZE;
+    while(window_start < PACKET_COUNT) {
+        bzero(buffer,1024);
+        int n = recvfrom(client_sock,buffer,sizeof(buffer),0,(struct sockaddr *)&server_addr,&server_size);
 
-        send_window(client_sock, server_addr, packets, window_start, window_end);
-
-        while (window_start < PACKET_COUNT) {
-                bzero(buffer, 1024);
-                addr_size = sizeof(server_addr);
-
-                int n = recvfrom(client_sock, buffer, 1024, 0, (struct sockaddr*)&server_addr, &addr_size);
-                if (n < 0) {
-                        printf("Client: Timeout! Resending window\n");
-                        send_window(client_sock, server_addr, packets, window_start, window_end);
-                } else {
-                        int ack_id = atoi(buffer);
-                        printf("Client: Received ACK for packet %d\n", ack_id);
-                        if (ack_id != packets[window_start]) {
-                                printf("Client: Wrong ACK! Resending window\n");
-                                send_window(client_sock, server_addr, packets, window_start, window_end);
-                        } else {
-                                window_start++;
-                                if (window_end < PACKET_COUNT) {
-                                        send_packet(client_sock, server_addr, packets[window_end]);
-                                        window_end++;
-                                }
-                        }
+        if(n < 0) {
+            printf("Client : Timed Out! Resending window.\n");
+            send_window(window_start,window_end);
+        } else { // n > 0 
+            int ack_id = atoi(buffer);
+            if(ack_id != window_start) {    // Resend window
+                printf("Wrong acknowledgement! Resending window.\n");
+                send_window(window_start,window_end);
+            } else {
+                printf("Client : Received acknowledgement for packet %d\n",ack_id);
+                window_start++;
+                if(window_end < PACKET_COUNT) {     // Send next packet
+                    send_packet(packets[window_end]);
+                    window_end++;
                 }
-                sleep(1);
+            }
         }
-        close(client_sock);
+    }
+    close(client_sock);
 }
